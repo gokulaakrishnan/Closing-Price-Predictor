@@ -10,53 +10,53 @@ import matplotlib.pyplot as plt
 plt.style.use('fivethirtyeight')
 
 #getting required inputs
-name= input("Enter name of stock: ")
-start_date= input("Starting date of dataset, eg. 2021-12-19: ")
-end_date= input("Ending date of dataset, eg. 2021-12-25: ")
+stocks= input("Enter name of stock: ")
+startpoint= input("Starting date of dataset, eg. 2021-12-19: ")
+endpoint= input("Ending date of dataset, eg. 2021-12-25: ")
 
 #storing the dataset
-df= web.DataReader (name , data_source= 'yahoo', start= start_date, end= end_date)
+df= web.DataReader (stocks , data_source= 'yahoo', start= startpoint, end= endpoint)
 
 #filtering out the dataset to only closing price
 data= df.filter(['Close'])
 dataset= data.values
 
 #identifying no. of rows to train model
-train_data= math.ceil(len(dataset) * .8)
+datatrain= math.ceil(len(dataset) * .8)
 
 #Scaling the data
 scale= MinMaxScaler(feature_range=(0,1))
 scale_data= scale.fit_transform(dataset)
 
 #Creating training dataset and scale training dataset
-train_dataset= scale_data[0:train_data , :]
+train_dataset= scale_data[0:datatrain , :]
 
-x_data= []
-y_data= []
+dataox= []
+dataoy= []
 
 
 for i in range(60, len(train_dataset)):
-    x_data.append(train_dataset[i-60:i,0])
-    y_data.append(train_dataset[i,0])
+    dataox.append(train_dataset[i-60:i,0])
+    dataoy.append(train_dataset[i,0])
     if i<=60:
-        print(x_data)
-        print(y_data)
+        print(dataox)
+        print(dataoy)
         print()
 
 
-x_data= np.array(x_data)
-y_data= np.array(y_data)
+dataox= np.array(dataox)
+dataoy= np.array(dataoy)
 
 
 #Reshaping to 3d
-rows_x= x_data.shape[0]
-cols_x= x_data.shape[1]
-x_data= np.reshape(x_data, (rows_x, cols_x, 1)) 
+xrows= dataox.shape[0]
+xcolums= dataox.shape[1]
+dataox= np.reshape(dataox, (xrows, xcolums, 1)) 
 
 
 #building LSTM
 model= Sequential()
-model.add(LSTM(50, return_sequences=True, input_shape= (x_data.shape[1], 1)))
+model.add(LSTM(50, return_sequences=True, input_shape= (dataox.shape[1], 1)))
 model.add(LSTM(50, return_sequences= False))
 model.add(Dense(25))
 model.add(Dense(1))
@@ -67,15 +67,15 @@ model.compile(optimizer='adam', loss= 'mean_squared_error')
 
 
 #Training Model
-model.fit(x_data, y_data, batch_size=1, epochs=1)
+model.fit(dataox, dataoy, batch_size=1, epochs=1)
 
 #Testing dataset
-testing_data= scale_data[train_data-60:,:]
+datatest= scale_data[datatrain-60:,:]
 
 x_testing=[]
-y_testing= dataset[train_data:,:]
-for i in range (60, len(testing_data)):
-    x_testing.append(testing_data[i-60:i,0])
+y_testing= dataset[datatrain:,:]
+for i in range (60, len(datatest)):
+    x_testing.append(datatest[i-60:i,0])
 
 x_testing= np.array(x_testing)
 
@@ -91,15 +91,12 @@ rmse= np.sqrt(np.mean(prediction_values - y_testing)**2)
 
 
 #Plotting the graph
-train= data[:train_data]
-validation_data= data[train_data:]
-validation_data['Predicted Values']= prediction_values
+train= data[:datatrain]
+validate= data[datatrain:]
+validate['Predicted Values']= prediction_values
 plt.figure(figsize= (18,10))
 plt.title('Stock Predictor')
-plt.xlabel('Date', fontsize= 20)
-plt.ylabel('Closing Price USD', fontsize= 20)
+plt.xlabel('Date', fontsize= 25)
+plt.ylabel('Closing Price', fontsize= 25)
 plt.plot(train['Close'])
-plt.plot(validation_data[['Close', 'Predicted Values']])
-
-
-
+plt.plot(validate[['Close', 'Predicted Values']])
